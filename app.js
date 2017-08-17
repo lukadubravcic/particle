@@ -1,63 +1,88 @@
-// http://jsfiddle.net/epistemex/k8y3dw0g/
+'use strict'
 
-var c=document.getElementById("myCanvas");
-var ctx=c.getContext("2d");
-var cx = [];
-var cy = [];
-c.width = window.innerWidth;
-c.height = window.innerHeight;
+class particleSimulation {
 
-var maxDistanceThreshold = (c.width+c.height)*0.05;
-console.log(maxDistanceThreshold);
+	constructor (canvas, nodeNumber) {
+		this.ctx = canvas.getContext("2d");; 
+		this.nodeNumber = nodeNumber;
+		this.maxDistanceThreshold = (window.innerWidth + window.innerHeight) * 0.05;
 
-for (var i = 0; i < 10; i++) {
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
 
-	cx.push(Math.random()*c.width);
-	cy.push(Math.random()*c.height);
-	//console.log(cx);
+		this.cx = [];
+		this.cy = [];
+		this.distMatx = [];
 
-}
-
-for (i = 0; i < cx.length-1; i++) {
-						
-	ctx.beginPath();
-	ctx.arc(cx[i],cy[i],3,0,2*Math.PI);
-	ctx.fillStyle = "#f2f2f2";
-	ctx.lineWidth = 0;
-	ctx.fill();
-	//ctx.stroke();
-		
-	// ctx.beginPath();
-	// ctx.moveTo(cx[i+1] , cy[i+1]);
-	// ctx.lineTo( cx[i], cy[i]);
-	// ctx.stroke();
-}	
-
-
-function createDistanceMatrix(arrX, arrY) {
-
-	var matDims = arrX.length;
-	(distMatx = []).length = matDims;
-	// (arr = []).length = matDims;
-	
-	for(var i = 0; i < matDims; i++){
-		(distMatx[i] = []).length = matDims
-		distMatx[i].fill(0);	
+		this.randDots();
+		this.drawDots();
+		this.createDistanceMatrix();
+		this.drawLinesBetweenDots();
 	}
 
-	
-
-	for (i = 0; i < matDims; i++) {
-		for (var j = i; j < matDims; j++) {
-			distMatx[i][j] = Math.round(distanceBetweenPoints(arrX[i], arrY[i], arrX[j], arrY[j]));
+	randDots() {
+		for (let i = 0; i < this.nodeNumber; i++) {
+			this.cx.push(Math.random()*c.width);
+			this.cy.push(Math.random()*c.height);
 		}
 	}
+
+	drawDots() {
+		for (let i = 0; i < this.cx.length-1; i++) {								
+			this.ctx.beginPath();
+			this.ctx.arc(this.cx[i],this.cy[i],2,0,2*Math.PI);
+			this.ctx.fillStyle = "#f2f2f2";
+			this.ctx.lineWidth = 0;
+			this.ctx.fill();
+		}	
+	}
+
+	createDistanceMatrix() {
+		this.matDims = this.cx.length;
+			
+		for (let i = 0; i < this.matDims; i++){
+			(this.distMatx[i] = []).length = this.matDims;
+			this.distMatx[i].fill(0);	
+		}	
+
+		for (let i = 0; i < this.matDims; i++) {
+			for (let j = i; j < this.matDims; j++) {
+				this.distMatx[i][j] = Math.round(this.distanceBetweenPoints(this.cx[i], this.cy[i], this.cx[j], this.cy[j]));
+			}
+		}
+	}
+
+	distanceBetweenPoints(x1, y1, x2, y2) {
+		return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+	}
+
+	drawLinesBetweenDots () {
+
+		for (let i = 0; i < this.cx.length; i++) {
+			for (let j = i; j < this.cx.length; j++) {
+				if ((this.distMatx[i][j] != 0) && (this.distMatx[i][j] < this.maxDistanceThreshold)) {
+					this.ctx.beginPath();
+
+					this.ctx.lineWidth = 0.5 - ((this.distMatx[i][j] / this.maxDistanceThreshold) * 0.5).toFixed(2);
+					console.log(this.ctx.lineWidth);
+
+					// if (this.distMatx[i][j] < 0.25 * this.maxDistanceThreshold) this.ctx.lineWidth = "1";
+					// else if (this.distMatx[i][j] < 0.5 * this.maxDistanceThreshold) this.ctx.lineWidth="0.15";
+					// else if (this.distMatx[i][j] < 0.75 * this.maxDistanceThreshold) this.ctx.lineWidth="0.1";
+					// else if (this.distMatx[i][j] > 0.75 * this.maxDistanceThreshold) this.ctx.lineWidth="0.05";
+
+					this.ctx.strokeStyle= "#f2f2f2"; 
+					this.ctx.moveTo(this.cx[i], this.cy[i]);
+					this.ctx.lineTo(this.cx[j], this.cy[j]);
+					this.ctx.stroke(); 
+				}
+			}
+		}
+	}
+
 }
 
-function distanceBetweenPoints(x1, y1, x2, y2) {
-	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-}
 
-createDistanceMatrix(cx, cy);
 
-console.log(distMatx);
+let c = document.getElementById("myCanvas");
+let particle = new particleSimulation(c, 500);
